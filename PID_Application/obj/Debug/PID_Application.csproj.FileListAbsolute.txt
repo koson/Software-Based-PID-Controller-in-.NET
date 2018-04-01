@@ -1,0 +1,27 @@
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\bin\Debug\PID_Application.exe.config
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\bin\Debug\PID_Application.exe
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\bin\Debug\PID_Application.pdb
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\bin\Debug\NationalInstruments.DAQmx.dll
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\bin\Debug\NationalInstruments.DAQmx.xml
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.MainForm.resources
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.Properties.Resources.resources
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.csproj.GenerateResource.Cache
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.exe
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.pdb
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\PID_Application.exe.config
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\PID_Application.exe
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\PID_Application.pdb
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.Common.dll
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.DAQmx.dll
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.NiLmClientDLL.dll
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.MStudioCLM.dll
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.Common.xml
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\bin\Debug\NationalInstruments.DAQmx.xml
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.MainForm.resources
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.Properties.Resources.resources
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.csproj.GenerateResource.cache
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.csproj.CoreCompileInputs.cache
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.csproj.CopyComplete
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.exe
+C:\Users\Tyler Dula\source\repos\PID_Controller\PID_Application\obj\Debug\PID_Application.pdb
+C:\Users\W7F10S11\Desktop\Lab_Auto_Spring_2018_Dula\PID_Controller\PID_Application\obj\Debug\PID_Application.csprojResolveAssemblyReference.cache
