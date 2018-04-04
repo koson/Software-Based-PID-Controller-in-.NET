@@ -12,13 +12,19 @@ namespace PID_Application
         //Form members
         private System.Windows.Forms.Timer formUpdateTimer;
         private System.Timers.Timer pidTimeStep;
+
+        private readonly object _formTimerLock = new object();
+        private readonly object _pidTimerLock = new object();
+        private bool _formStopped = false;
+        private bool _pidStopped = false;
         
         private TextBox[] textBoxes;
         private Label[] labels;
-        private PID pidTask;
-
+        private TemperatureController temperatureController;
+        
         private string[] names;
         private bool taskRunning;
+        private int timeTicks = 0;
         private string tempUnits;
 
         #region Form Handles
@@ -53,7 +59,8 @@ namespace PID_Application
             MenuLockCParameter.ShowShortcutKeys = true;
             MenuLockTimeStepSize.ShowShortcutKeys = true;
             MenuDeviceRefresh.ShowShortcutKeys = true;
-      
+
+            tempUnits = "C";
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -88,9 +95,9 @@ namespace PID_Application
                 TempChnnlBx.Items.AddRange(DaqSystem.Local.GetPhysicalChannels(PhysicalChannelTypes.AI, PhysicalChannelAccess.External));
 
                 if (DeviceBx.Items.Count != 0)
-                    pidTask = new PID(DeviceBx.Items[0].ToString(), 0, 0, AITerminalConfiguration.Rse);
+                    temperatureController = new TemperatureController(0.01,"C",TempChnnlBx.Items[0].ToString(),AIVoltageUnits.Volts,VoltChnnlBx.Items[0].ToString(),AOVoltageUnits.Volts);
                 else
-                    pidTask = new PID(DeviceBx.Text, 0, 0, AITerminalConfiguration.Rse);
+                    temperatureController = new TemperatureController(0.01, "C", TempChnnlBx.Text, AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts);
 
             }
             catch (DaqException)
@@ -158,8 +165,11 @@ namespace PID_Application
             formUpdateTimer.Dispose();
             pidTimeStep.Dispose();
 
-            pidTask.Off();
-            //pidTask.Dispose();
+            if(temperatureController != null)
+            {
+                temperatureController.Dispose();
+            }
+
         }   
         #endregion
 
@@ -195,38 +205,45 @@ namespace PID_Application
             {
                 case 0:
                         if(double.TryParse(textBoxes[0].Text,out numToWrite))
-                            pidTask.TempSet = numToWrite;
+                        {
+                            temperatureController.DesiredTemp = numToWrite;
+                            TempPlot.ChartAreas[0].AxisY.Minimum = temperatureController.DesiredTemp - 1.0;
+                            TempPlot.ChartAreas[0].AxisY.Maximum = temperatureController.DesiredTemp + 1.0;
+
+                            TempPlotExpanded.ChartAreas[0].AxisY.Minimum = temperatureController.DesiredTemp - 15.0;
+                            TempPlotExpanded.ChartAreas[0].AxisY.Maximum = temperatureController.DesiredTemp + 15.0;
+                        }   
                         else
-                            pidTask.TempSet = 0.0;
+                            temperatureController.DesiredTemp = 0.0;
                         break;
                 case 1:
                         if (double.TryParse(textBoxes[1].Text, out numToWrite))
-                            pidTask.ProportionalTerm = numToWrite;
+                            temperatureController.A = numToWrite;
                         else
-                            pidTask.ProportionalTerm = 0.0;
+                            temperatureController.A = 0.0;
                         break;
                 case 2:
                         if (double.TryParse(textBoxes[2].Text, out numToWrite))
-                            pidTask.Integralterm = numToWrite;
+                            temperatureController.B = numToWrite;
                         else
-                            pidTask.Integralterm = 0.0;
+                            temperatureController.B = 0.0;
                         break;
                 case 3:
                         if (double.TryParse(textBoxes[3].Text, out numToWrite))
-                            pidTask.DerivativeTerm = numToWrite;
+                            temperatureController.C = numToWrite;
                         else
-                            pidTask.DerivativeTerm = 0.0;
+                            temperatureController.C = 0.0;
                         break;
-                case 4:
-                        if (double.TryParse(textBoxes[4].Text, out numToWrite))
-                        {
-                            pidTask.TimeStep = numToWrite;
-                        }
-                        else
-                        {
-                            pidTask.TimeStep = 0.01;
-                        }                        
-                        break;
+                //case 4:
+                //        if (double.TryParse(textBoxes[4].Text, out numToWrite))
+                //        {
+                //            pidTask.TimeStep = numToWrite;
+                //        }
+                //        else
+                //        {
+                //            pidTask.TimeStep = 0.01;
+                //        }                        
+                //        break;
             }
 
         }
@@ -239,7 +256,7 @@ namespace PID_Application
                 double tempSet,timeStep,proportionalTerm,integralTerm,derivativeTerm; //C# 7 allows for inline declerations of out parameters
 
                 StartStopBttn.Text = "Turn Control\nOff";
-
+                
                 try
                 {
                     if (double.TryParse(TempSetBx.Text, out tempSet))
@@ -273,22 +290,33 @@ namespace PID_Application
                         DerivativeBx.Text = "0.0";
                     }
 
-                    pidTask = new PID(DeviceBx.Text, TempChnnlBx.SelectedIndex, VoltChnnlBx.SelectedIndex, AITerminalConfiguration.Rse) {
-                        TimeStep = timeStep,
-                        TempSet = tempSet,
-                        ProportionalTerm = proportionalTerm,
-                        Integralterm = integralTerm,
-                        DerivativeTerm = derivativeTerm,
-                        Units = tempUnits
+                    temperatureController = new TemperatureController(0.01,tempUnits, TempChnnlBx.Text,AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts) {
+                        //TimeStep = timeStep,
+                        DesiredTemp = tempSet,
+                        A = proportionalTerm,
+                        B = integralTerm,
+                        C = derivativeTerm,
                     };
-                    
-                    pidTask.Update();
 
-                    formUpdateTimer.Enabled = true;
-                    pidTimeStep.Enabled = true;
-                    pidTimeStep.Interval = (int)(timeStep*1000);
-                    pidTimeStep.Start();
-                    formUpdateTimer.Start();
+                    TempPlot.ChartAreas[0].AxisY.Minimum = temperatureController.DesiredTemp - 1.0;
+                    TempPlot.ChartAreas[0].AxisY.Maximum = temperatureController.DesiredTemp + 1.0;
+
+                    TempPlotExpanded.ChartAreas[0].AxisY.Minimum = temperatureController.DesiredTemp - 15.0;
+                    TempPlotExpanded.ChartAreas[0].AxisY.Maximum = temperatureController.DesiredTemp + 15.0;
+
+                    temperatureController.AdjustOutput();
+
+                    lock (_formTimerLock)
+                    {
+                        formUpdateTimer.Enabled = true;
+                        _formStopped = false;
+                    }
+                    lock (_pidTimerLock)
+                    {
+                        pidTimeStep.Enabled = true;
+                        _pidStopped = false;
+                        pidTimeStep.Interval = (int)(timeStep*1000);
+                    }
 
                     taskRunning = true;
                     VisualControlStatus.BackColor = Color.Green;
@@ -296,6 +324,10 @@ namespace PID_Application
 
                     MenuUnitCelsius.Enabled = false;
                     MenuUnitFarenheit.Enabled = false;
+                    MenuDeviceRefresh.Enabled = false;
+
+                    pidTimeStep.Start();
+                    formUpdateTimer.Start();
                 }
                 catch
                 {
@@ -314,6 +346,9 @@ namespace PID_Application
                     DerivativeBx.Enabled = false;
                     StartStopBttn.Enabled = false;
                     taskRunning = false;
+                    MenuUnitCelsius.Enabled = true;
+                    MenuUnitFarenheit.Enabled = true;
+                    MenuDeviceRefresh.Enabled = true;
 
                     MessageBox.Show("There was an error communicating with the device. Check devices status and refresh the device list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -321,12 +356,21 @@ namespace PID_Application
             }
             else
             {
-                pidTimeStep.Stop();
-                pidTimeStep.Enabled = false;
-                formUpdateTimer.Stop();
                 formUpdateTimer.Enabled = false;
+                pidTimeStep.Enabled = false;
 
-                pidTask.Off();
+                lock (_formTimerLock)
+                {
+                    formUpdateTimer.Enabled = false;
+                    _formStopped = true;
+                }
+                lock (_pidTimerLock)
+                {
+                    pidTimeStep.Enabled = false;
+                    _pidStopped = true;
+                }
+
+                temperatureController.Dispose();
 
                 TempPlot.Series[0].Points.Clear();
                 TempPlot.Series[1].Points.Clear();
@@ -340,45 +384,54 @@ namespace PID_Application
                 VisualControlStatusLbl.Text = "Off";
                 MenuUnitCelsius.Enabled = true;
                 MenuUnitFarenheit.Enabled = true;
+                MenuDeviceRefresh.Enabled = true;
             }
         }
 
         private void MainForm_TimerTick(object sender,EventArgs e)
         {
-            double tempSet; 
+                double tempSet;
+                
+                //to prevent unneccessary queueing of threads
+                lock (_formTimerLock) //double-checked locking for thread sensitive activity
+                {
+                    if (!formUpdateTimer.Enabled)
+                        return;
 
-            TempLbl.Text = pidTask.TempRead.ToString("00.00");
+                    if (_formStopped)
+                        return;
 
-            TimeStepsLbl.Text = pidTask.NumOfSteps.ToString("00");
-            TimeToEqLbl.Text = (pidTask.NumOfSteps * double.Parse(TimeStepBx.Text)).ToString("000.00");
+                    TempLbl.Text = temperatureController.TempRead.ToString("00.00");    
+                }
+            
+                TempPlot.Series[0].Points.AddY(temperatureController.TempRead);
+                TempPlotExpanded.Series[0].Points.AddY(temperatureController.TempRead);
 
-            ProportionalContributionLbl.Text = pidTask.ProportionalContribution.ToString("0.00");
-            IntegralContributionLbl.Text = pidTask.IntegralContribution.ToString("0.00");
-            DerivativeContributionLbl.Text = pidTask.DerivativeContribution.ToString("0.00");
-
-            TempPlot.ChartAreas[0].AxisY.Minimum = pidTask.TempSet - 1.0;
-            TempPlot.ChartAreas[0].AxisY.Maximum = pidTask.TempSet + 1.0;
-            TempPlot.Series[0].Points.AddY(pidTask.TempRead);
-
-            TempPlotExpanded.ChartAreas[0].AxisY.Minimum = pidTask.TempSet - 15.0;
-            TempPlotExpanded.ChartAreas[0].AxisY.Maximum = pidTask.TempSet + 15.0;
-            TempPlotExpanded.Series[0].Points.AddY(pidTask.TempRead);
-
-            if (double.TryParse(TempSetBx.Text, out tempSet))
-            {
-                TempPlot.Series[1].Points.AddY(tempSet);
-                TempPlotExpanded.Series[1].Points.AddY(tempSet);
-            }
-            else
-            {
-                TempPlot.Series[1].Points.AddY(0.0);
-                TempPlotExpanded.Series[1].Points.AddY(0.0);
-            }
-
+                if (double.TryParse(TempSetBx.Text, out tempSet))
+                {
+                    TempPlot.Series[1].Points.AddY(tempSet);
+                    TempPlotExpanded.Series[1].Points.AddY(tempSet);
+                }
+                else
+                {
+                    TempPlot.Series[1].Points.AddY(0.0);
+                    TempPlotExpanded.Series[1].Points.AddY(0.0);
+                }
         }
         private void PID_TimeStep(object sender, EventArgs e)
         {
-            pidTask.Update();
+
+            lock (_pidTimerLock)
+            {
+                if (!pidTimeStep.Enabled) //double checked locking
+                    return;
+                if (_pidStopped)
+                    return;
+
+                temperatureController.AdjustOutput(); //thread sensitive application
+                timeTicks++;
+            }
+
         }
 
         #region Menus
@@ -437,20 +490,18 @@ namespace PID_Application
 
         private void MenuUnitCelsius_Click(object sender, EventArgs e)
         {
-            pidTask.Units = "Celsius";
+            tempUnits = "C";
             TempUnitLbl.Text = "°C";
             TsetLbl.Text = "T Set (°C):";
-            tempUnits = "Celsius";
 
             TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°C)";
             TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°C)";
         }
         private void MenuUnitFarenheit_Click(object sender, EventArgs e)
         {
-            pidTask.Units = "Farenheit";
+            tempUnits = "F";
             TempUnitLbl.Text = "°F";
             TsetLbl.Text = "T Set (°F):";
-            tempUnits = "Farenheit";
 
             TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°F)";
             TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°F)";
@@ -458,7 +509,7 @@ namespace PID_Application
 
         private void MenuDeviceRefresh_Click(object sender, EventArgs e)
         {
-            double tempSet,timeStep,proportionalTerm,integralTerm,derivativeTerm;
+            double tempSet, timeStep, proportionalTerm, integralTerm, derivativeTerm;
             bool devExists = false;
 
             DeviceBx.Items.Clear();
@@ -499,25 +550,25 @@ namespace PID_Application
 
                 if (DeviceBx.Items.Count != 0)
                 {
-                    pidTask = new PID(DeviceBx.Items[0].ToString(), 0, 0, AITerminalConfiguration.Rse){
-                        TimeStep = timeStep,
-                        TempSet = tempSet,
-                        ProportionalTerm = proportionalTerm,
-                        Integralterm = integralTerm,
-                        DerivativeTerm = derivativeTerm,
-                        Units = tempUnits
+                    temperatureController = new TemperatureController(0.01, tempUnits, TempChnnlBx.Items[0].ToString(), AIVoltageUnits.Volts, VoltChnnlBx.Items[0].ToString(), AOVoltageUnits.Volts)
+                    {
+                        DesiredTemp = tempSet,
+                        A = proportionalTerm,
+                        B = integralTerm,
+                        C = derivativeTerm,
+                        //Units = tempUnits
                     };
                     devExists = true;
                 }
                 else
                 {
-                    pidTask = new PID(DeviceBx.Text, 0, 0, AITerminalConfiguration.Rse){
-                        TimeStep = timeStep,
-                        TempSet = tempSet,
-                        ProportionalTerm = proportionalTerm,
-                        Integralterm = integralTerm,
-                        DerivativeTerm = derivativeTerm,
-                        Units = tempUnits
+                    temperatureController = new TemperatureController(0.01, tempUnits, TempChnnlBx.Text, AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts)
+                    {
+                        //TimeStep = timeStep,
+                        DesiredTemp = tempSet,
+                        A = proportionalTerm,
+                        B = integralTerm,
+                        C = derivativeTerm,
                     };
                     devExists = false;
                 }
@@ -547,7 +598,7 @@ namespace PID_Application
                     TempChnnlBx.SelectedIndex = -1;
                 }
 
-                if(devExists)
+                if (devExists)
                 {
                     TempSetBx.Enabled = true;
                     TimeStepBx.Enabled = true;
