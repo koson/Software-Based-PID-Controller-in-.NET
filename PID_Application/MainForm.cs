@@ -25,6 +25,7 @@ namespace PID_Application
         private string[] names;
         private bool taskRunning;
         private int timeTicks = 0;
+        private string tempUnits;
 
         #region Form Handles
         public MainForm()
@@ -58,7 +59,8 @@ namespace PID_Application
             MenuLockCParameter.ShowShortcutKeys = true;
             MenuLockTimeStepSize.ShowShortcutKeys = true;
             MenuDeviceRefresh.ShowShortcutKeys = true;
-      
+
+            tempUnits = "C";
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -168,7 +170,6 @@ namespace PID_Application
                 temperatureController.Dispose();
             }
 
-            //pidTask.Dispose();
         }   
         #endregion
 
@@ -261,7 +262,6 @@ namespace PID_Application
                     if (double.TryParse(TempSetBx.Text, out tempSet))
                     {
                         TempPlot.Series[1].Points.AddY(tempSet);
-
                     }
                     else
                     {
@@ -290,13 +290,12 @@ namespace PID_Application
                         DerivativeBx.Text = "0.0";
                     }
 
-                    temperatureController = new TemperatureController(0.01,"C", TempChnnlBx.Text,AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts) {
+                    temperatureController = new TemperatureController(0.01,tempUnits, TempChnnlBx.Text,AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts) {
                         //TimeStep = timeStep,
                         DesiredTemp = tempSet,
                         A = proportionalTerm,
                         B = integralTerm,
                         C = derivativeTerm,
-                        //Units = tempUnits
                     };
 
                     TempPlot.ChartAreas[0].AxisY.Minimum = temperatureController.DesiredTemp - 1.0;
@@ -325,6 +324,7 @@ namespace PID_Application
 
                     MenuUnitCelsius.Enabled = false;
                     MenuUnitFarenheit.Enabled = false;
+                    MenuDeviceRefresh.Enabled = false;
 
                     pidTimeStep.Start();
                     formUpdateTimer.Start();
@@ -346,6 +346,9 @@ namespace PID_Application
                     DerivativeBx.Enabled = false;
                     StartStopBttn.Enabled = false;
                     taskRunning = false;
+                    MenuUnitCelsius.Enabled = true;
+                    MenuUnitFarenheit.Enabled = true;
+                    MenuDeviceRefresh.Enabled = true;
 
                     MessageBox.Show("There was an error communicating with the device. Check devices status and refresh the device list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -381,6 +384,7 @@ namespace PID_Application
                 VisualControlStatusLbl.Text = "Off";
                 MenuUnitCelsius.Enabled = true;
                 MenuUnitFarenheit.Enabled = true;
+                MenuDeviceRefresh.Enabled = true;
             }
         }
 
@@ -399,9 +403,9 @@ namespace PID_Application
 
                     TempLbl.Text = temperatureController.TempRead.ToString("00.00");    
                 }
-
+            
                 TempPlot.Series[0].Points.AddY(temperatureController.TempRead);
-                //TempPlotExpanded.Series[0].Points.AddY(temperatureController.TempRead);
+                TempPlotExpanded.Series[0].Points.AddY(temperatureController.TempRead);
 
                 if (double.TryParse(TempSetBx.Text, out tempSet))
                 {
@@ -486,126 +490,124 @@ namespace PID_Application
 
         private void MenuUnitCelsius_Click(object sender, EventArgs e)
         {
-            //pidTask.Units = "Celsius";
-            //TempUnitLbl.Text = "°C";
-            //TsetLbl.Text = "T Set (°C):";
-            //tempUnits = "Celsius";
+            tempUnits = "C";
+            TempUnitLbl.Text = "°C";
+            TsetLbl.Text = "T Set (°C):";
 
-            //TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°C)";
-            //TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°C)";
+            TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°C)";
+            TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°C)";
         }
         private void MenuUnitFarenheit_Click(object sender, EventArgs e)
         {
-            //pidTask.Units = "Farenheit";
-            //TempUnitLbl.Text = "°F";
-            //TsetLbl.Text = "T Set (°F):";
-            //tempUnits = "Farenheit";
+            tempUnits = "F";
+            TempUnitLbl.Text = "°F";
+            TsetLbl.Text = "T Set (°F):";
 
-            //TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°F)";
-            //TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°F)";
+            TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°F)";
+            TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°F)";
         }
 
         private void MenuDeviceRefresh_Click(object sender, EventArgs e)
         {
-            //double tempSet,timeStep,proportionalTerm,integralTerm,derivativeTerm;
-            //bool devExists = false;
+            double tempSet, timeStep, proportionalTerm, integralTerm, derivativeTerm;
+            bool devExists = false;
 
-            //DeviceBx.Items.Clear();
-            //VoltChnnlBx.Items.Clear();
-            //TempChnnlBx.Items.Clear();
+            DeviceBx.Items.Clear();
+            VoltChnnlBx.Items.Clear();
+            TempChnnlBx.Items.Clear();
 
-            //try
-            //{
-            //    DeviceBx.Items.AddRange(DaqSystem.Local.Devices);
-            //    VoltChnnlBx.Items.AddRange(DaqSystem.Local.GetPhysicalChannels(PhysicalChannelTypes.AO, PhysicalChannelAccess.External));
-            //    TempChnnlBx.Items.AddRange(DaqSystem.Local.GetPhysicalChannels(PhysicalChannelTypes.AI, PhysicalChannelAccess.External));
+            try
+            {
+                DeviceBx.Items.AddRange(DaqSystem.Local.Devices);
+                VoltChnnlBx.Items.AddRange(DaqSystem.Local.GetPhysicalChannels(PhysicalChannelTypes.AO, PhysicalChannelAccess.External));
+                TempChnnlBx.Items.AddRange(DaqSystem.Local.GetPhysicalChannels(PhysicalChannelTypes.AI, PhysicalChannelAccess.External));
 
-            //    if (!double.TryParse(TempSetBx.Text, out tempSet))
-            //    {
-            //        tempSet = 22.0;
-            //        TempSetBx.Text = "22.0";
-            //    }
-            //    if (!double.TryParse(TimeStepBx.Text, out timeStep))
-            //    {
-            //        timeStep = 0.01;
-            //        TimeStepBx.Text = "0.01";
-            //    }
-            //    if (!double.TryParse(ProportionalBx.Text, out proportionalTerm))
-            //    {
-            //        proportionalTerm = 0.0;
-            //        ProportionalBx.Text = "0.0";
-            //    }
-            //    if (!double.TryParse(IntegralBx.Text, out integralTerm))
-            //    {
-            //        integralTerm = 0.0;
-            //        IntegralBx.Text = "0.0";
-            //    }
-            //    if (!double.TryParse(DerivativeBx.Text, out derivativeTerm))
-            //    {
-            //        derivativeTerm = 0.0;
-            //        DerivativeBx.Text = "0.0";
-            //    }
+                if (!double.TryParse(TempSetBx.Text, out tempSet))
+                {
+                    tempSet = 22.0;
+                    TempSetBx.Text = "22.0";
+                }
+                if (!double.TryParse(TimeStepBx.Text, out timeStep))
+                {
+                    timeStep = 0.01;
+                    TimeStepBx.Text = "0.01";
+                }
+                if (!double.TryParse(ProportionalBx.Text, out proportionalTerm))
+                {
+                    proportionalTerm = 0.0;
+                    ProportionalBx.Text = "0.0";
+                }
+                if (!double.TryParse(IntegralBx.Text, out integralTerm))
+                {
+                    integralTerm = 0.0;
+                    IntegralBx.Text = "0.0";
+                }
+                if (!double.TryParse(DerivativeBx.Text, out derivativeTerm))
+                {
+                    derivativeTerm = 0.0;
+                    DerivativeBx.Text = "0.0";
+                }
 
-            //    if (DeviceBx.Items.Count != 0)
-            //    {
-            //        pidTask = new PID(DeviceBx.Items[0].ToString(), 0, 0, AITerminalConfiguration.Rse){
-            //            TimeStep = timeStep,
-            //            TempSet = tempSet,
-            //            ProportionalTerm = proportionalTerm,
-            //            Integralterm = integralTerm,
-            //            DerivativeTerm = derivativeTerm,
-            //            Units = tempUnits
-            //        };
-            //        devExists = true;
-            //    }
-            //    else
-            //    {
-            //        pidTask = new PID(DeviceBx.Text, 0, 0, AITerminalConfiguration.Rse){
-            //            TimeStep = timeStep,
-            //            TempSet = tempSet,
-            //            ProportionalTerm = proportionalTerm,
-            //            Integralterm = integralTerm,
-            //            DerivativeTerm = derivativeTerm,
-            //            Units = tempUnits
-            //        };
-            //        devExists = false;
-            //    }
-            //}
-            //catch (DaqException)
-            //{
-            //    TempSetBx.Enabled = false;
-            //    TimeStepBx.Enabled = false;
-            //    ProportionalBx.Enabled = false;
-            //    IntegralBx.Enabled = false;
-            //    DerivativeBx.Enabled = false;
-            //    StartStopBttn.Enabled = false;
-            //    MessageBox.Show("No DAQ device is present. Please check device connection in NImax and refresh the device list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
-            //finally
-            //{
-            //    if (DeviceBx.Items.Count != 0)
-            //    {
-            //        DeviceBx.SelectedIndex = 0;
-            //        VoltChnnlBx.SelectedIndex = 0;
-            //        TempChnnlBx.SelectedIndex = 0;
-            //    }
-            //    else
-            //    {
-            //        DeviceBx.SelectedIndex = -1;
-            //        VoltChnnlBx.SelectedIndex = -1;
-            //        TempChnnlBx.SelectedIndex = -1;
-            //    }
+                if (DeviceBx.Items.Count != 0)
+                {
+                    temperatureController = new TemperatureController(0.01, tempUnits, TempChnnlBx.Items[0].ToString(), AIVoltageUnits.Volts, VoltChnnlBx.Items[0].ToString(), AOVoltageUnits.Volts)
+                    {
+                        DesiredTemp = tempSet,
+                        A = proportionalTerm,
+                        B = integralTerm,
+                        C = derivativeTerm,
+                        //Units = tempUnits
+                    };
+                    devExists = true;
+                }
+                else
+                {
+                    temperatureController = new TemperatureController(0.01, tempUnits, TempChnnlBx.Text, AIVoltageUnits.Volts, VoltChnnlBx.Text, AOVoltageUnits.Volts)
+                    {
+                        //TimeStep = timeStep,
+                        DesiredTemp = tempSet,
+                        A = proportionalTerm,
+                        B = integralTerm,
+                        C = derivativeTerm,
+                    };
+                    devExists = false;
+                }
+            }
+            catch (DaqException)
+            {
+                TempSetBx.Enabled = false;
+                TimeStepBx.Enabled = false;
+                ProportionalBx.Enabled = false;
+                IntegralBx.Enabled = false;
+                DerivativeBx.Enabled = false;
+                StartStopBttn.Enabled = false;
+                MessageBox.Show("No DAQ device is present. Please check device connection in NImax and refresh the device list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (DeviceBx.Items.Count != 0)
+                {
+                    DeviceBx.SelectedIndex = 0;
+                    VoltChnnlBx.SelectedIndex = 0;
+                    TempChnnlBx.SelectedIndex = 0;
+                }
+                else
+                {
+                    DeviceBx.SelectedIndex = -1;
+                    VoltChnnlBx.SelectedIndex = -1;
+                    TempChnnlBx.SelectedIndex = -1;
+                }
 
-            //    if(devExists)
-            //    {
-            //        TempSetBx.Enabled = true;
-            //        TimeStepBx.Enabled = true;
-            //        ProportionalBx.Enabled = true;
-            //        IntegralBx.Enabled = true;
-            //        DerivativeBx.Enabled = true;
-            //        StartStopBttn.Enabled = true;
-            //    }
-            //}
+                if (devExists)
+                {
+                    TempSetBx.Enabled = true;
+                    TimeStepBx.Enabled = true;
+                    ProportionalBx.Enabled = true;
+                    IntegralBx.Enabled = true;
+                    DerivativeBx.Enabled = true;
+                    StartStopBttn.Enabled = true;
+                }
+            }
         }
 
         private void MenuProgramHelp_Click(object sender, EventArgs e)
