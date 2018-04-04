@@ -16,6 +16,7 @@
             if (disposing && (components != null))
             {
                 components.Dispose();
+                temperatureController.Dispose();
             }
             base.Dispose(disposing);
         }
