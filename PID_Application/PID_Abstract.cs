@@ -11,7 +11,7 @@ namespace PID_Application
         private double b;
         private double c;
         private double input, output, setPoint;
-        private double currentError, previousError, sumOfErrors;
+        private double currentError, previousError, sumOfErrors, errorStep;
         private double timeStep;
 
         public PID(double timeStep)
@@ -20,6 +20,7 @@ namespace PID_Application
 
             previousError = 0.0;
             sumOfErrors = 0.0;
+            errorStep = 0.0;
         }
 
         //inheriting classes must implement their own adjustment for the 
@@ -31,12 +32,21 @@ namespace PID_Application
         protected double OutputEstimate()
         {            
             currentError = setPoint - input;
+
+            errorStep = currentError - previousError;
+
             sumOfErrors = sumOfErrors + currentError;
             output = A * currentError + B * timeStep * sumOfErrors + (C / timeStep) * (currentError - previousError);
 
             previousError = currentError;
 
             return output;
+        }
+
+        public void ReturnErrors(out double currentError,out double sumOfErrors,out double errorStep){
+            currentError = this.currentError;
+            sumOfErrors = this.sumOfErrors;
+            errorStep = this.errorStep;
         }
 
         public double A
@@ -90,7 +100,7 @@ namespace PID_Application
             writer = new AnalogSingleChannelWriter(writeTask.Stream);
 
             writeTask.AOChannels.CreateVoltageChannel(aoChannel, "", -10.0, 10.0, aoUnits);
-
+            
             sensor.TemperatureCoefficient = 0.01; //temperature controller inherently contains a temp sensor with 0.01mV/K coefficient
         } 
 
@@ -98,7 +108,7 @@ namespace PID_Application
         {
             Input = sensor.ReadSensor();            //read the sensor
             OutputEstimate();                       //estimate the output based on errors
-
+            
             if (OutPut > 10.0)
                 writer.WriteSingleSample(true, 10.0); //write the new output. Output min and max are default +-10.0V
             else if (OutPut < -10.0)
@@ -106,6 +116,7 @@ namespace PID_Application
             else
                 writer.WriteSingleSample(true, OutPut);
         }
+
 
         #region IDisposable
         public void Dispose()
