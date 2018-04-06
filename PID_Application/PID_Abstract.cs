@@ -30,7 +30,7 @@ namespace PID_Application
         //Output Estimation is clearly defined in base class
         //A proportional term - B integral term - C Derivative term
         protected double OutputEstimate()
-        {            
+        {
             currentError = setPoint - input;
 
             errorStep = currentError - previousError;
