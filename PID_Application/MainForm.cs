@@ -136,7 +136,7 @@ namespace PID_Application
             TempPlot.Series[0].Name = "Temperature";
             TempPlot.Series.Add("Set Point").Color = Color.Green;
             TempPlot.Series[1].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            TempPlot.ChartAreas[0].AxisX.Title = "Time (ms)";
+            TempPlot.ChartAreas[0].AxisX.Title = "Time Steps";
             TempPlot.ChartAreas[0].AxisY.Title = "Temperature (°C)";
 
             TempPlotExpanded.ChartAreas[0].AxisY.LabelStyle.Format = "###.#";
@@ -144,7 +144,7 @@ namespace PID_Application
             TempPlotExpanded.Series[0].Name = "Temperature";
             TempPlotExpanded.Series.Add("Set Point").Color = Color.Green;
             TempPlotExpanded.Series[1].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            TempPlotExpanded.ChartAreas[0].AxisX.Title = "Time (ms)";
+            TempPlotExpanded.ChartAreas[0].AxisX.Title = "Time Steps";
             TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°C)";
 
             Cursor.Current = Cursors.Default;
