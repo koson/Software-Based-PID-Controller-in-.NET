@@ -487,6 +487,7 @@
             this.label15.Size = new System.Drawing.Size(40, 13);
             this.label15.TabIndex = 21;
             this.label15.Text = "time(s):";
+            this.label15.Visible = false;
             // 
             // TimeToEqLbl
             // 
@@ -497,6 +498,7 @@
             this.TimeToEqLbl.Size = new System.Drawing.Size(43, 15);
             this.TimeToEqLbl.TabIndex = 20;
             this.TimeToEqLbl.Text = "label14";
+            this.TimeToEqLbl.Visible = false;
             // 
             // label12
             // 

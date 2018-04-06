@@ -27,6 +27,8 @@ namespace PID_Application
         private int timeTicks = 0;
         private string tempUnits;
 
+        private double pidError, pidSumErr, pidErrStep;
+
         #region Form Handles
         public MainForm()
         {
@@ -406,6 +408,15 @@ namespace PID_Application
             
                 TempPlot.Series[0].Points.AddY(temperatureController.TempRead);
                 TempPlotExpanded.Series[0].Points.AddY(temperatureController.TempRead);
+
+                temperatureController.ReturnErrors(out pidError,out pidSumErr,out pidErrStep);
+
+                ProportionalContributionLbl.Text = (temperatureController.A * pidError).ToString("00.00");
+                IntegralContributionLbl.Text = (temperatureController.B * pidSumErr).ToString("00.00");
+                DerivativeContributionLbl.Text = (temperatureController.C * pidErrStep).ToString("00.00");
+
+                TimeStepsLbl.Text = timeTicks.ToString();
+                //TimeToEqLbl.Text = (timeTicks * double.Parse(TimeStepBx.Text)).ToString();
 
                 if (double.TryParse(TempSetBx.Text, out tempSet))
                 {

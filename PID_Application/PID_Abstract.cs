@@ -36,7 +36,7 @@ namespace PID_Application
             errorStep = currentError - previousError;
 
             sumOfErrors = sumOfErrors + currentError;
-            output = A * currentError + B * timeStep * sumOfErrors + (C / timeStep) * (currentError - previousError);
+            output = A * currentError + B * timeStep * sumOfErrors + (C / timeStep) * (errorStep);
 
             previousError = currentError;
 
