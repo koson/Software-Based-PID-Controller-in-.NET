@@ -149,6 +149,8 @@ namespace PID_Application
             TempPlotExpanded.ChartAreas[0].AxisX.Title = "Time Steps";
             TempPlotExpanded.ChartAreas[0].AxisY.Title = "Temperature (°C)";
 
+            TimeStepsLbl.Text = "0";
+
             Cursor.Current = Cursors.Default;
         }
       
@@ -358,6 +360,9 @@ namespace PID_Application
             }
             else
             {
+                timeTicks = 0;
+                TimeStepsLbl.Text = "0";
+
                 formUpdateTimer.Enabled = false;
                 pidTimeStep.Enabled = false;
 

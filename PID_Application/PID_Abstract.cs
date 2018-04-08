@@ -74,7 +74,7 @@ namespace PID_Application
         }
         protected double SetPoint
         {
-            set { setPoint = value; }
+            set { setPoint = value; sumOfErrors = 0.0; previousError = 0.0; }
             get { return setPoint; }
         }
     }
@@ -145,7 +145,7 @@ namespace PID_Application
 
         public double DesiredTemp
         {
-            set { SetPoint = value; }
+            set { SetPoint = value;  }
             get { return SetPoint; }
         }
         public double TempRead
